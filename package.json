@@ -9,7 +9,8 @@
     "test": "vitest run",
     "build": "tsup src/index.ts src/bin/gqlink.ts --format cjs,esm --dts",
     "lint": "tsc",
-    "ci": "npm run lint && npm run test && npm run build"
+    "ci": "npm run lint && npm run test && npm run build",
+    "release": "npm run lint && npm run test && npm run build && changeset publish"
   },
   "author": "Virtual Stoodeeoh Inc.",
   "bin": {
