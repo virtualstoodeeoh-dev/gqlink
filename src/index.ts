@@ -14,8 +14,6 @@ export const handleVSCalls = async (fnInput, fields, fnName, fnType) => {
 
   const queryString = `${fnType} { ${fnName}${fnInputString} ${fields} }`;
 
-  console.log(queryString);
-
   const { data } = await axios.post("http://localhost:5000/graphql", {
     query: queryString,
   });

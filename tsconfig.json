@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "target": "ESNext",
-    "sourceMap": true,
-    "outDir": "dist"
-  },
-  "include": ["**/*"]
+    "module": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    //"strict": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
 }

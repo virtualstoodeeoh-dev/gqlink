@@ -4,19 +4,24 @@ import { io } from "socket.io-client";
 import { spawn } from "child_process";
 import axios from "axios";
 import fs from "fs";
+import dotenv from "dotenv";
+dotenv.config();
 
 const args = process.argv.slice(2);
 
-const socket = io("http://localhost:5000");
+if (process.env.GQLINK_API === undefined) {
+  console.log("GQLINK_API environment variable not set");
+  process.exit(1);
+}
+
+const socket = io(process.env.GQLINK_API);
 
 const main = () => {
-  socket.emit("join", "ID");
-
   socket.on("connect", () => {
     console.log("Watching Server For Functions & Types");
 
     axios
-      .post("http://localhost:5000/graphql", {
+      .post(process.env.GQLINK_API + "/graphql", {
         query: `
           query {
             getFunction
@@ -34,26 +39,26 @@ const main = () => {
   runCommands(args);
 };
 
-const runCommands = (args) => {
+const runCommands = (args: string[]) => {
   const child = spawn(args[0], args.slice(1), {
     stdio: "inherit",
     shell: true,
   });
 
   child.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
+    console.log(`GQLink Exist: ${code}`);
   });
 
   child.on("error", (err) => {
-    console.log(`child process exited with error ${err}`);
+    console.log(`GQLink Error: ${err}`);
   });
 
   child.on("exit", (code) => {
-    console.log(`child process exited with code ${code}`);
+    console.log(`GQLink Exist: ${code}`);
   });
 
   child.on("disconnect", () => {
-    console.log(`child process disconnected`);
+    console.log(`GQLink: Disconnected`);
   });
 
   child.on("message", (message) => {
@@ -61,19 +66,11 @@ const runCommands = (args) => {
   });
 
   child.on("spawn", () => {
-    console.log(`child process spawned`);
-  });
-
-  child.on("error", (err) => {
-    console.log(`child process error ${err}`);
-  });
-
-  child.on("exit", (code) => {
-    console.log(`child process exited with code ${code}`);
+    console.log(`GQLink: Running CMDS`);
   });
 };
 
-const exportFunctionsTypes = (data) => {
+const exportFunctionsTypes = (data: string) => {
   const parsedData = JSON.parse(data);
 
   const types = parsedData.types;
@@ -99,7 +96,7 @@ const exportFunctionsTypes = (data) => {
   // Extra types
   const KeyValidationType = `type KeyValidation<T> = {
   [K in keyof T]?: T[K] extends object ? KeyValidation<T[K]> : true;
-};`;
+};\n\n`;
 
   typescriptTypes.push(KeyValidationType);
 
@@ -137,18 +134,17 @@ const exportFunctionsTypes = (data) => {
 
   // Write TypeScript file
   const typescriptFile = `
-import { handleVSCalls } from "vsfunctions";
+import { handleVSCalls } from "gqlink";
 
 ${typescriptTypes.join("")}
 ${typescriptFunctions.join("")}
 `;
 
-  if (!fs.existsSync("./vsFunc")) {
-    // If the folder doesn't exist, create it
-    fs.mkdirSync("./vsFunc", { recursive: true });
+  if (!fs.existsSync("./gqlink")) {
+    fs.mkdirSync("./gqlink", { recursive: true });
   }
 
-  fs.writeFileSync("./vsFunc/types.ts", typescriptFile);
+  fs.writeFileSync("./gqlink/types.ts", typescriptFile);
 };
 
 main();
